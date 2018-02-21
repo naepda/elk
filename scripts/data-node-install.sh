@@ -511,4 +511,4 @@ ELAPSED_TIME=$(($SECONDS - $START_TIME))
 PRETTY=$(printf '%dh:%dm:%ds\n' $(($ELAPSED_TIME/3600)) $(($ELAPSED_TIME%3600/60)) $(($ELAPSED_TIME%60)))
 
 log "End execution of Elasticsearch script extension on ${HOSTNAME} in ${PRETTY}"
-exit 0
+# exit 0
