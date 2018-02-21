@@ -95,15 +95,6 @@
       "[concat(parameters('templateBaseUrl'), 'scripts/logstash-ubuntu-install.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/logstash-install.sh')]"
     ],
-    "ubuntuScripts2": [
-      "[concat('https://elk4saextensions.blob.core.windows.net/', 'scripts/elasticsearch-ubuntu-install.sh')]",
-      "[concat('https://elk4saextensions.blob.core.windows.net/', 'scripts/kibana-install.sh')]",
-      "[concat('https://elk4saextensions.blob.core.windows.net/', 'scripts/vm-disk-utils-0.1.sh')]",
-      "[concat('https://elk4saextensions.blob.core.windows.net/', 'scripts/user-information.sh')]",
-      "[concat('https://elk4saextensions.blob.core.windows.net/', 'scripts/data-node-install.sh')]",
-      "[concat('https://elk4saextensions.blob.core.windows.net/', 'scripts/logstash-ubuntu-install.sh')]",
-      "[concat('https://elk4saextensions.blob.core.windows.net/', 'scripts/logstash-install.sh')]"
-    ],
     "ubuntuSkus": {
       "2": "14.04.4-LTS",
       "5": "16.04.0-LTS"
@@ -124,7 +115,7 @@
           "typeHandlerVersion": "2.0",
           "autoUpgradeMinorVersion": true,
           "settings": {
-            "fileUris": "[variables('ubuntuScripts2')]"
+            "fileUris": "[variables('ubuntuScripts')]"
           },
           "protectedSettings": {
             "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -x', variables('commonShortOpts'), variables('commonInstallParams'))]"
@@ -136,7 +127,7 @@
           "typeHandlerVersion": "2.0",
           "autoUpgradeMinorVersion": true,
           "settings": {
-            "fileUris": "[variables('ubuntuScripts2')]"
+            "fileUris": "[variables('ubuntuScripts')]"
           },
           "protectedSettings": {
             "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -y', variables('commonShortOpts'), variables('commonInstallParams'))]"
@@ -148,7 +139,7 @@
           "typeHandlerVersion": "2.0",
           "autoUpgradeMinorVersion": true,
           "settings": {
-            "fileUris": "[variables('ubuntuScripts2')]"
+            "fileUris": "[variables('ubuntuScripts')]"
           },
           "protectedSettings": {
             "commandToExecute": "[concat('bash data-node-install.sh', variables('datanodecommonInstallParams'))]"
@@ -160,7 +151,7 @@
           "typeHandlerVersion": "2.0",
           "autoUpgradeMinorVersion": true,
           "settings": {
-            "fileUris": "[variables('ubuntuScripts2')]"
+            "fileUris": "[variables('ubuntuScripts')]"
           },
           "protectedSettings": {
             "commandToExecute": "[concat('bash kibana-install.sh -n \"', parameters('esSettings').clusterName, '\" -v \"', parameters('esSettings').kibanaVersion, '\" -e \"', parameters('esSettings').version, '\" -u \"', concat('http://', parameters('topologySettings').vNetLoadBalancerIp, ':9200'), '\"')]"
@@ -172,7 +163,7 @@
           "typeHandlerVersion": "2.0",
           "autoUpgradeMinorVersion": true,
           "settings": {
-            "fileUris": "[variables('ubuntuScripts2')]"
+            "fileUris": "[variables('ubuntuScripts')]"
           },
           "protectedSettings": {
             "commandToExecute": "[concat('bash logstash-install.sh', variables('logstashCommonInstallParams'))]"
