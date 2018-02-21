@@ -74,7 +74,6 @@ ES_VERSION="5.3.0"
 DATANODE_COUNT=0
 
 #Loop through options passed
-# while getopts :n:v:A:R:K:S:Z:p:U:I:c:e:f:m:t:s:o:a:k:L:C:Xxyzldjh optname; do
 while getopts :n:v:Z:p:h optname; do
   log "Option $optname set"
   case $optname in
