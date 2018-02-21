@@ -89,6 +89,7 @@ while getopts :n:v:Z:p:h optname; do
       ;;
     p) #namespace prefix for nodes
       NAMESPACE_PREFIX="${OPTARG}"
+      ;;
     h) #show help
       help
       exit 2
