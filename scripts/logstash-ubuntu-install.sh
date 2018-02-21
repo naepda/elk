@@ -734,7 +734,7 @@ configure_logstash()
     local ES_HEAP=`free -m |grep Mem | awk '{if ($2/2 >31744) print 31744;else print int($2/2+0.5);}'`
     if [[ "${ES_VERSION}" == \5* ]]; then
       configure_logstash5 $ES_HEAP
-	elif [[ "${ES_VERSION}" == \6* ]]; then
+	  elif [[ "${ES_VERSION}" == \6* ]]; then
       configure_logstash6 $ES_HEAP
     else
       configure_logstash5 $ES_HEAP

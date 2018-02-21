@@ -283,8 +283,8 @@ configuration_and_plugins()
     local ES_HEAP=`free -m |grep Mem | awk '{if ($2/2 >31744) print 31744;else print int($2/2+0.5);}'`
 
     log "[configure_kibana] Configure kibana 5.x & 6.x heap size - $1"
-    echo "-Xmx$1m" >> ${RETURN_HOME}/jvm.options
-    echo "-Xms$1m" >> ${RETURN_HOME}/jvm.options
+    echo "-Xmx{$ES_HEAP}m" >> ${RETURN_HOME}/jvm.options
+    echo "-Xms{$ES_HEAP}m" >> ${RETURN_HOME}/jvm.options
     log "[configure_kibana] configured kibana default configuration"
 
     # install plugins
@@ -292,20 +292,20 @@ configuration_and_plugins()
     local DOWNLOAD_URL="https://github.com/dlumbrer/kbn_searchtables/releases/download/6.X-1/kbn_searchtables.tar.gz"
     sudo wget -q "$DOWNLOAD_URL" -O kbn_searchtables.tar.gz
 
-    mkdir -p /usr/share/kibana/install_plugins
-    chmod 777 -R /usr/share/kibana/install_plugins/
+    sudo mkdir -p /usr/share/kibana/install_plugins
+    sudo chmod 777 -R /usr/share/kibana/install_plugins/
 
     cd /usr/share/kibana/
-    chown kibana:kibana -R ./plugins
-    chmod 775 -R ./plugins
+    sudo chown kibana:kibana -R ./plugins
+    sudo chmod 775 -R ./plugins
 
     adduser kibana --disabled-password
 
     log "[install plugin] move kbn_searchtables plugin"
     sudo mv kbn_searchtables.tar.gz /usr/share/kibana/install_plugins/kbn_searchtables.tar.gz
     cd /usr/share/kibana/install_plugins/
-    tar -xvf ./kbn_searchtables.tar.gz
-    mv /usr/share/kibana/install_plugins/kbn_searchtables /usr/share/kibana/plugins/kbn_searchtables
+    sudo tar -xvf ./kbn_searchtables.tar.gz
+    sudo mv /usr/share/kibana/install_plugins/kbn_searchtables /usr/share/kibana/plugins/kbn_searchtables
 
 
     # if [ ${INSTALL_PLUGINS} -ne 0 ]; then
@@ -381,7 +381,7 @@ reboot_start()
 {
     local REBOOT_START=/usr/share/kibana/commands/utils/reboot_start.sh
     sudo chmod 777 -R /var/log/kibana/
-    sudo chown elk4sa:elk4sa -R /usr/share/kibana
+    # sudo chown elk4sa:elk4sa -R /usr/share/kibana
     sudo chmod 775 -R /usr/share/kibana
     sudo chmod 775 -R /etc/kibana/
     mkdir -p /usr/share/kibana/commands/utils/

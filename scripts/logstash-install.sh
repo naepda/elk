@@ -13,42 +13,19 @@
 
 help()
 {
-    echo "This script bootstraps an Elasticsearch cluster on a data node"
+    echo "This script installs Logstash on Ubuntu"
     echo "Parameters:"
     echo "-n elasticsearch cluster name"
     echo "-v elasticsearch version 2.3.3"
     echo "-p hostname prefix of nodes for unicast discovery"
 
-    # echo "-d cluster uses dedicated masters"
     echo "-Z <number of nodes> hint to the install script how many data nodes we are provisioning"
-    # echo "-Y <number of nodes> hint to the install script how many client nodes we are provisioning"
-
-    # echo "-A admin password"
-    # echo "-R read password"
-    # echo "-K kibana user password"
-    # echo "-S kibana server password"
-    # echo "-X enable anonymous access with monitoring role (for health probes)"
-
-    # echo "-l install plugins"
-    # echo "-L <plugin;plugin> install additional plugins"
-
-    # echo "-U api url"
-    # echo "-I marketing id"
-    # echo "-c company name"
-    # echo "-e email address"
-    # echo "-f first name"
-    # echo "-m last name"
-    # echo "-t job title"
-    # echo "-s cluster setup"
-    # echo "-o country"
-
-    # echo "-j install azure cloud plugin for snapshot and restore"
-    # echo "-a set the default storage account for azure cloud plugin"
-    # echo "-k set the key for the default storage account for azure cloud plugin"
 
     echo "-h view this help content"
 }
 
+# Custom logging with time so we can easily relate running times, also log to separate file so order is guaranteed.
+# The Script extension output the stdout/err buffer in intervals with duplicates.
 log()
 {
     echo \[$(date +%d%m%Y-%H:%M:%S)\] "$1"
@@ -56,6 +33,35 @@ log()
 }
 
 log "Begin execution of Logstash Install script extension"
+START_TIME=$SECONDS
+
+export DEBIAN_FRONTEND=noninteractive
+export RETURN_HOME="/opt/logstash"
+export SETTING_WORK_HOME="/datadisk/disk1"
+
+#########################
+# Preconditions
+#########################
+
+if [ "${UID}" -ne 0 ];
+then
+    log "Script executed without root permissions"
+    echo "You must be root to run this program." >&2
+    exit 3
+fi
+
+# TEMP FIX - Re-evaluate and remove when possible
+# This is an interim fix for hostname resolution in current VM
+grep -q "${HOSTNAME}" /etc/hosts
+if [ $? == 0 ]
+then
+  log "${HOSTNAME}found in /etc/hosts"
+else
+  log "${HOSTNAME} not found in /etc/hosts"
+  # Append it to the hsots file if not there
+  echo "127.0.0.1 ${HOSTNAME}" >> /etc/hosts
+  log "hostname ${HOSTNAME} added to /etchosts"
+fi
 
 #########################
 # Paramater handling
@@ -64,32 +70,8 @@ log "Begin execution of Logstash Install script extension"
 CLUSTER_NAME="elasticsearch"
 NAMESPACE_PREFIX=""
 ES_VERSION="5.3.0"
-# INSTALL_PLUGINS=0
-# INSTALL_ADDITIONAL_PLUGINS=""
-# YAML_CONFIGURATION=""
-# INSTALL_AZURECLOUD_PLUGIN=0
-# STORAGE_ACCOUNT=""
-# STORAGE_KEY=""
-# CLUSTER_USES_DEDICATED_MASTERS=0
+
 DATANODE_COUNT=0
-# DATA_ONLY_NODE=0
-
-# USER_ADMIN_PWD="changeME"
-# USER_READ_PWD="changeME"
-# USER_KIBANA4_PWD="changeME"
-# USER_KIBANA4_SERVER_PWD="changeME"
-# ANONYMOUS_ACCESS=0
-
-# API_URL=""
-# MARKETING_ID=""
-# COMPANY_NAME=""
-# EMAIL=""
-# FIRST_NAME=""
-# LAST_NAME=""
-# JOB_TITLE=""
-# CLUSTER_SETUP=""
-# COUNTRY=""
-# INSTALL_SWITCHES=""
 
 #Loop through options passed
 # while getopts :n:v:A:R:K:S:Z:p:U:I:c:e:f:m:t:s:o:a:k:L:C:Xxyzldjh optname; do
@@ -102,89 +84,11 @@ while getopts :n:v:Z:p:h optname; do
     v) #elasticsearch version number
       ES_VERSION="${OPTARG}"
       ;;
-    # A) #security admin pwd
-    #   USER_ADMIN_PWD="${OPTARG}"
-    #   ;;
-    # R) #security readonly pwd
-    #   USER_READ_PWD="${OPTARG}"
-    #   ;;
-    # K) #security kibana user pwd
-    #   USER_KIBANA4_PWD="${OPTARG}"
-    #   ;;
-    # S) #security kibana server pwd
-    #   USER_KIBANA4_SERVER_PWD="${OPTARG}"
-    #   ;;
-    # X) #anonymous access
-    #   #ANONYMOUS_ACCESS=1
-    #   ANONYMOUS_ACCESS=0
-    #   ;;
     Z) #number of logstash hints (used to calculate minimum master nodes)
       DATANODE_COUNT=${OPTARG}
       ;;
-    # l) #install plugins
-    #   #INSTALL_PLUGINS=1
-    #   INSTALL_PLUGINS=0
-    #   ;;
-    # j) #install azure cloud plugin
-    #   #INSTALL_AZURECLOUD_PLUGIN=1
-    #   INSTALL_AZURECLOUD_PLUGIN=0
-    #   ;;
-    # L) #install additional plugins
-    #   INSTALL_ADDITIONAL_PLUGINS="${OPTARG}"
-    #   ;;
-    # C) #additional yaml configuration
-    #   YAML_CONFIGURATION="${OPTARG}"
-    #   ;;
-    # a) #azure storage account for azure cloud plugin
-    #   STORAGE_ACCOUNT="${OPTARG}"
-    #   ;;
-    # k) #azure storage account key for azure cloud plugin
-    #   STORAGE_KEY="${OPTARG}"
-    #   ;;
-    # d) #cluster is using dedicated master nodes
-    #   #CLUSTER_USES_DEDICATED_MASTERS=1
-    #   CLUSTER_USES_DEDICATED_MASTERS=0
-    #   ;;
-    # x) #master node
-    #   log "master node argument will be ignored"
-    #   ;;
-    # y) #client node
-    #   log "client node argument will be ignored"
-    #   ;;
-    # z) #data node
-    #   #DATA_ONLY_NODE=1
-    #   DATA_ONLY_NODE=0
-    #   ;;
     p) #namespace prefix for nodes
       NAMESPACE_PREFIX="${OPTARG}"
-      ;;
-    # U) #set API url
-    #   API_URL="${OPTARG}"
-    #   ;;
-    # I) #set marketing id
-    #   MARKETING_ID="${OPTARG}"
-    #   ;;
-    # c) #set company name
-    #   COMPANY_NAME="${OPTARG}"
-    #   ;;
-    # e) #set email
-    #   EMAIL="${OPTARG}"
-    #   ;;
-    # f) #set first name
-    #   FIRST_NAME="${OPTARG}"
-    #   ;;
-    # m) #set last name
-    #   LAST_NAME="${OPTARG}"
-    #   ;;
-    # t) #set job title
-    #   JOB_TITLE="${OPTARG}"
-    #   ;;
-    # o) #set country
-    #   COUNTRY="${OPTARG}"
-    #   ;;
-    # s) #set cluster setup
-    #   CLUSTER_SETUP="${OPTARG}"
-    #   ;;
     h) #show help
       help
       exit 2
@@ -197,42 +101,174 @@ while getopts :n:v:Z:p:h optname; do
   esac
 done
 
-# if [ $CLUSTER_USES_DEDICATED_MASTERS -eq 1 ]; then
-#   INSTALL_SWITCHES="$INSTALL_SWITCHES -d"
-# fi
+#########################
+# Installation steps as functions
+#########################
 
-# if [ $DATA_ONLY_NODE -eq 1 ]; then
-#   INSTALL_SWITCHES="$INSTALL_SWITCHES -z"
-# fi
+# Format data disks (Find data disks then partition, format, and mount them as seperate drives)
+format_data_disks()
+{
+  log "[format_data_disks] starting partition and format attached disks"
+  # using the -s paramater causing disks under /datadisk/* to be raid0'ed
+  bash vm-disk-utils-0.1.sh -s
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -ne 0 ]; then
+    log "[format_data_disks] returned non-zero exit code: $EXIT_CODE"
+    exit $EXIT_CODE
+  fi
+  log "[format_data_disks] finished partition and format attached disks"
+}
 
-# if [ $INSTALL_AZURECLOUD_PLUGIN -eq 1 ]; then
-#   INSTALL_SWITCHES="$INSTALL_SWITCHES -j"
-# fi
+# Configure Logstash Data Disk Folder and Permissions
+setup_data_disk()
+{
+  local RAIDDISK="$SETTING_WORK_HOME"
+  log "[setup_data_disk] Configuring disk $RAIDDISK/data"
+  sudo mkdir -p "$RAIDDISK/data"
+  sudo chown -R elk4sa:elk4sa "$RAIDDISK"
+  sudo chmod -R 777 "$RAIDDISK"
+}
 
-# if [ $INSTALL_PLUGINS -eq 1 ]; then
-#   INSTALL_SWITCHES="$INSTALL_SWITCHES -l"
-# fi
+# Install Oracle Java
+install_java()
+{
+    log "[install_java] Adding apt repository for java 8"
+    (add-apt-repository -y ppa:webupd8team/java || (sleep 15; add-apt-repository -y ppa:webupd8team/java))
+    log "[install_java] updating apt-get"
 
-# if [ $ANONYMOUS_ACCESS -eq 1 ]; then
-#   INSTALL_SWITCHES="$INSTALL_SWITCHES -X"
-# fi
+    (apt-get -y update || (sleep 15; apt-get -y update)) > /dev/null
+    log "[install_java] updated apt-get"
+    echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+    echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+    log "[install_java] Installing Java"
+    (apt-get -yq install oracle-java8-installer || (sleep 15; apt-get -yq install oracle-java8-installer))
+    command -v java >/dev/null 2>&1 || { sleep 15; sudo rm /var/cache/oracle-jdk8-installer/jdk-*; sudo apt-get install -f; }
 
-# install logstash
-# bash logstash-ubuntu-install.sh -n "$CLUSTER_NAME" -v "$ES_VERSION" -A "$USER_ADMIN_PWD" -R "$USER_READ_PWD" -K "$USER_KIBANA4_PWD" -S "$USER_KIBANA4_SERVER_PWD" -Z "$DATANODE_COUNT" -p "$NAMESPACE_PREFIX" -a "$STORAGE_ACCOUNT" -k "$STORAGE_KEY" -L "$INSTALL_ADDITIONAL_PLUGINS" -C "$YAML_CONFIGURATION" $INSTALL_SWITCHES
-# EXIT_CODE=$?
-# if [ $EXIT_CODE -ne 0 ]; then
-#   log "installing Logstash returned exit code $EXIT_CODE"
-#   exit $EXIT_CODE
-# fi
-bash logstash-ubuntu-install.sh -n "$CLUSTER_NAME" -v "$ES_VERSION" -Z "$DATANODE_COUNT" -p "$NAMESPACE_PREFIX"
-EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ]; then
-  log "installing Logstash returned exit code $EXIT_CODE"
-  exit $EXIT_CODE
-fi
+    #if the previus did not install correctly we go nuclear, otherwise this loop will early exit
+    for i in $(seq 30); do
+      if $(command -v java >/dev/null 2>&1); then
+        log "[install_java] Installed java!"
+        return
+      else
+        sleep 5
+        sudo rm /var/cache/oracle-jdk8-installer/jdk-*;
+        sudo rm -f /var/lib/dpkg/info/oracle-java8-installer*
+        sudo rm /etc/apt/sources.list.d/*java*
+        sudo apt-get -yq purge oracle-java8-installer*
+        sudo apt-get -yq autoremove
+        sudo apt-get -yq clean
+        (add-apt-repository -y ppa:webupd8team/java || (sleep 15; add-apt-repository -y ppa:webupd8team/java))
+        sudo apt-get -yq update
+        sudo apt-get -yq install --reinstall oracle-java8-installer
+        log "[install_java] Seeing if java is Installed after nuclear retry ${i}/30"
+      fi
+    done
+    command -v java >/dev/null 2>&1 || { log "Java did not get installed properly even after a retry and a forced installation" >&2; exit 50; }
+}
+
+# Install Logstash
+install_logstash()
+{
+    if [[ "${ES_VERSION}" == \2* ]]; then
+        DOWNLOAD_URL="https://download.elasticsearch.org/logstash/release/org/logstash/distribution/deb/logstash/$ES_VERSION/logstash-$ES_VERSION.deb?ultron=msft&gambit=azure"
+    elif [[ "${ES_VERSION}" == \5* ]]; then
+        DOWNLOAD_URL="https://artifacts.elastic.co/downloads/logstash/logstash-$ES_VERSION.tar.gz?ultron=msft&gambit=azure"
+    elif [[ "${ES_VERSION}" == \6* ]]; then
+        DOWNLOAD_URL="https://artifacts.elastic.co/downloads/logstash/logstash-$ES_VERSION.tar.gz?ultron=msft&gambit=azure"
+    else
+        DOWNLOAD_URL="https://download.elasticsearch.org/logstash/logstash/logstash-$ES_VERSION.deb"
+    fi
+    log "[install_logstash] Installing Logstash Version - $ES_VERSION"
+    log "[install_logstash] Download location - $DOWNLOAD_URL"
+    sudo wget -q "$DOWNLOAD_URL" -O logstash.tar.gz
+    log "[install_logstash] Downloaded logstash $ES_VERSION"
+    sudo mkdir -p ${RETURN_HOME}
+    sudo mv logstash.tar.gz ${RETURN_HOME}/logstash.tar.gz
+    cd ${RETURN_HOME}
+    sudo tar -xvf ./logstash.tar.gz
+    sudo cp -r ./logstash-$ES_VERSION ./cesa-selfserving
+    sudo mv ./logstash-$ES_VERSION ./blobdownload
+
+    sudo mkdir -p ${RETURN_HOME}/blobdownload/install_gem
+    sudo mkdir -p ${RETURN_HOME}/cesa-selfserving/install_gem
+
+    sudo adduser logstash --disabled-password
+
+    sudo chown elk4sa:elk4sa -R ./blobdownload
+    sudo chown elk4sa:elk4sa -R ./cesa-selfserving
+    sudo chmod 775 -R ./blobdownload
+    sudo chmod 775 -R ./cesa-selfserving
+
+    sudo chmod 777 -R ${RETURN_HOME}/blobdownload/install_gem/
+    sudo chmod 777 -R ${RETURN_HOME}/cesa-selfserving/install_gem/
+
+    cd ${RETURN_HOME}
+    DOWNLOAD_GEM_URL = "https://raw.githubusercontent.com/naepda/elk_environment/master/logstash_plugin/logstash-input-azureblobdownload-0.9.8.gem"
+    sudo wget -q "$DOWNLOAD_GEM_URL" -O logstash-input-azureblobdownload-0.9.8.gem
+
+    sudo cp ./logstash-input-azureblobdownload-0.9.8.gem ${RETURN_HOME}/cesa-selfserving/install_gem/
+    sudo cp ./logstash-input-azureblobdownload-0.9.8.gem ${RETURN_HOME}/blobdownload/install_gem/
 
 
-# bash user-information.sh -U "$API_URL" -I "$MARKETING_ID" -c "$COMPANY_NAME" -e "$EMAIL" -f "$FIRST_NAME" -l "$LAST_NAME" -t "$JOB_TITLE" -s "$CLUSTER_SETUP" -o "$COUNTRY"
-# EXIT_CODE=$?
-# log "End execution of Logstash Install script extension"
-# exit $EXIT_CODE
+    cd ${RETURN_HOME}/cesa-selfserving/bin
+    sudo ./logstash-plugin install logstash-input-azureblob
+    sudo ./logstash-plugin install logstash-filter-date_formatter
+    sudo ./logstash-plugin install ${RETURN_HOME}/cesa-selfserving/install_gem/logstash-input-azureblobdownload-0.9.8.gem
+
+    cd ${RETURN_HOME}/blobdownload/bin
+    cd ./bin
+    sudo ./logstash-plugin install logstash-input-azureblob
+    sudo ./logstash-plugin install logstash-filter-date_formatter
+    sudo ./logstash-plugin install ${RETURN_HOME}/blobdownload/install_gem/logstash-input-azureblobdownload-0.9.8.gem
+
+    cd ${RETURN_HOME}
+
+    log "[install_logstash] Installed Logstash Version - $ES_VERSION"
+}
+
+configure_logstash()
+{
+    log "[configure_logstash] configuring logstash default configuration"
+    local ES_HEAP=`free -m |grep Mem | awk '{if ($2/2 >31744) print 31744;else print int($2/2+0.5);}'`
+    if [[ "${ES_VERSION}" == \5* ]]; then
+      configure_logstash5 $ES_HEAP
+    elif [[ "${ES_VERSION}" == \6* ]]; then
+      configure_logstash6 $ES_HEAP
+    else
+      configure_logstash5 $ES_HEAP
+    fi
+    log "[configure_logstash] configured logstash default configuration"
+}
+
+configure_logstash5()
+{
+    log "[configure_logstash] Configure logstash 5.x heap size - $1"
+    echo "-Xmx$1m" >> ${RETURN_HOME}/blobdownload/config/jvm.options
+    echo "-Xms$1m" >> ${RETURN_HOME}/blobdownload/config/jvm.options
+    echo "-Xmx$1m" >> ${RETURN_HOME}/cesa-selfserving/config/jvm.options
+    echo "-Xms$1m" >> ${RETURN_HOME}/cesa-selfserving/config/jvm.options
+}
+
+configure_logstash6()
+{
+    log "[configure_logstash] Configure logstash 6.x heap size - $1"
+    echo "-Xmx$1m" >> ${RETURN_HOME}/blobdownload/config/jvm.options
+    echo "-Xms$1m" >> ${RETURN_HOME}/blobdownload/config/jvm.options
+    echo "-Xmx$1m" >> ${RETURN_HOME}/cesa-selfserving/config/jvm.options
+    echo "-Xms$1m" >> ${RETURN_HOME}/cesa-selfserving/config/jvm.options
+}
+
+format_data_disks
+
+setup_data_disk
+
+install_java
+
+install_logstash
+
+
+ELAPSED_TIME=$(($SECONDS - $START_TIME))
+PRETTY=$(printf '%dh:%dm:%ds\n' $(($ELAPSED_TIME/3600)) $(($ELAPSED_TIME%3600/60)) $(($ELAPSED_TIME%60)))
+
+log "End execution of Logstash script extension on ${HOSTNAME} in ${PRETTY}"
+exit 0
