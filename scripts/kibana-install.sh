@@ -279,14 +279,6 @@ configuration_and_plugins()
     # set elasticsearch.requestTimeout
     echo "elasticsearch.requestTimeout: 180000" >> $KIBANA_CONF
 
-    log "[configure_kibana] configuring kibana default configuration"
-    local ES_HEAP=`free -m |grep Mem | awk '{if ($2/2 >31744) print 31744;else print int($2/2+0.5);}'`
-
-    log "[configure_kibana] Configure kibana 5.x & 6.x heap size - $1"
-    echo "-Xmx$ES_HEAPm" >> ${RETURN_HOME}/jvm.options
-    echo "-Xms$ES_HEAPm" >> ${RETURN_HOME}/jvm.options
-    log "[configure_kibana] configured kibana default configuration"
-
     # install plugins
     log "[install plugin] download kbn_searchtables plugin"
     local DOWNLOAD_URL="https://github.com/dlumbrer/kbn_searchtables/releases/download/6.X-1/kbn_searchtables.tar.gz"
