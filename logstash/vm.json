@@ -260,19 +260,7 @@
             }
           ]
         }
-      },
-      "resources": [
-        {
-          "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(variables('computername'), '/script')]",
-          "apiVersion": "2016-03-30",
-          "location": "[parameters('vm').shared.location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', variables('computername'))]"
-          ],
-          "properties": "[parameters('vm').installScript]"
-        }
-      ]
+      }
     }
   ],
   "outputs": {
