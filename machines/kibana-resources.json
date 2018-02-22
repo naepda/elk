@@ -324,7 +324,7 @@
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
-          "domainNameLabel": "[concat('kb-', uniqueString(resourceGroup().id))]"
+          "domainNameLabel": "[concat('cesa-', uniqueString(resourceGroup().id))]"
       }
       }
     },

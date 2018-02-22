@@ -189,7 +189,7 @@
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
-          "domainNameLabel": "[concat('ls-', variables('computername'))]"
+          "domainNameLabel": "[concat('cesa-', variables('computername'))]"
       }
       }
     },
