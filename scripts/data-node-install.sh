@@ -122,7 +122,7 @@ else
     MINIMUM_MASTER_NODES=$(((DATANODE_COUNT/2)+1))
     UNICAST_HOSTS='['
     for i in $(seq 0 $((DATANODE_COUNT-1))); do
-        UNICAST_HOSTS="$UNICAST_HOSTS\"${NAMESPACE_PREFIX}data-$i:9300\","
+        UNICAST_HOSTS="$UNICAST_HOSTS\"${NAMESPACE_PREFIX}data-r$i:9300\","
     done
     UNICAST_HOSTS="${UNICAST_HOSTS%?}]"
 fi
@@ -268,10 +268,12 @@ permissions_es_and_remove_logfile()
     sudo chmod 777 -R /datadisk
     sudo chown elk4sa:elk4sa -R /datadisk
     sudo chmod 777 -R /var/log/elasticsearch/
+    sudo chmod 777 -R /usr/share/elasticsearch
+    sudo chmod 777 -R /etc/elasticsearch/
     sudo mkdir -p /usr/share/elasticsearch/commands/utils/
-    sudo chown elk4sa:elk4sa -R /usr/share/elasticsearch
-    sudo chmod 775 -R /usr/share/elasticsearch
-    sudo chmod 775 -R /etc/elasticsearch/
+    sudo chmod 777 /etc/default/elasticsearch
+    sudo chmod 777 /etc/elasticsearch/elasticsearch.yml
+    sudo chmod 777 -R /usr/share/elasticsearch/commands
     sudo touch $REMOVE_LOGFILE
     sudo chmod 777 $REMOVE_LOGFILE
     sudo echo -e "#! /bin/bash\n\n# daily (log files) deleted by crontab on Ubuntu 16.04 LTS\nsudo find /var/log/elasticsearch/ -type f -name \"elk4sa-prd-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].log\" -mtime +7 -exec rm -f {} \;" >> $REMOVE_LOGFILE

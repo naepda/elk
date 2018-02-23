@@ -189,6 +189,7 @@ install_logstash()
     sudo cp -r ./logstash-$ES_VERSION ./cesa-selfserving
     sudo mv ./logstash-$ES_VERSION ./blobdownload
 
+    #install plugin
     sudo mkdir -p ${RETURN_HOME}/blobdownload/install_gem
     sudo mkdir -p ${RETURN_HOME}/cesa-selfserving/install_gem
 
@@ -203,7 +204,7 @@ install_logstash()
     sudo chmod 777 -R ${RETURN_HOME}/cesa-selfserving/install_gem/
 
     cd ${RETURN_HOME}
-    DOWNLOAD_GEM_URL = "https://raw.githubusercontent.com/naepda/elk_environment/master/logstash_plugin/logstash-input-azureblobdownload-0.9.8.gem"
+    DOWNLOAD_GEM_URL = "https://raw.githubusercontent.com/naepda/elk/master/plugins/logstash-input-azureblobdownload-0.9.8.gem"
     sudo wget -q "$DOWNLOAD_GEM_URL" -O logstash-input-azureblobdownload-0.9.8.gem
 
     sudo cp ./logstash-input-azureblobdownload-0.9.8.gem ${RETURN_HOME}/cesa-selfserving/install_gem/
@@ -221,8 +222,58 @@ install_logstash()
     sudo ./logstash-plugin install logstash-filter-date_formatter
     sudo ./logstash-plugin install ${RETURN_HOME}/blobdownload/install_gem/logstash-input-azureblobdownload-0.9.8.gem
 
-    cd ${RETURN_HOME}
+    #datadisk settings
+    cd ${SETTING_WORK_HOME}
+    chmod 777 -R ./*
 
+    # waits 5 seconds
+    echo making base directories...
+    sleep 5
+
+
+    # making base directories
+    cd ${SETTING_WORK_HOME}
+    cd ..
+    chown elk4sa:elk4sa -R ./disk1
+    chmod 777 -R ./disk1
+    cd ${SETTING_WORK_HOME}
+
+    # directory setting for "/datadisk/disk1"
+    mkdir ./data
+    mkdir ./log
+    mkdir ./elastic_stack
+
+    # directory setting for "/elastic_stack"
+    cd ./elastic_stack
+    mkdir ./azcopy
+    mkdir ./downloads
+    mkdir ./sincedb
+    mkdir ./logs
+
+    # setting access role whole of sub-directories
+    cd ${SETTING_WORK_HOME}
+    cd ..
+    chown elk4sa:elk4sa -R ./disk1
+    chmod 777 -R ./disk1
+
+    #commands, config, template settings
+    # vmNumber = ${${HOSTNAME}:3} # ex. logstash-4
+    # a=${var:0}
+    # cd ${RETURN_HOME}
+    # sudo wget -q "https://github.com/naepda/elk_environment/archive/0.0.1.tar.gz" -O elk_environment-0.0.1.tar.gz
+    # sudo tar -xvf ./elk_environment-0.0.1.tar.gz
+    # sudo cp -r /opt/logstash/elk_environment-0.0.1/00003_logstash/${vmNumber}/blobdownload/* /opt/logstash/blobdownload/
+    # sudo cp -r /opt/logstash/elk_environment-0.0.1/00003_logstash/${vmNumber}/cesa-selfserving/* /opt/logstash/cesa-selfserving/
+
+    # sudo chown elk4sa:elk4sa -R /opt/logstash/blobdownload
+    # sudo chown elk4sa:elk4sa -R /opt/logstash/cesa-selfserving
+    # sudo chmod 775 -R /opt/logstash/blobdownload
+    # sudo chmod 775 -R /opt/logstash/cesa-selfserving
+
+    # # crontab
+    # sudo chmod -R 777 /opt/logstash/cesa-selfserving/commands/utils/
+    # (sudo crontab -u root -l; echo "1 2 * * * /opt/logstash/cesa-selfserving/commands/utils/daily_remove_expired_logfiles_v1_0_171201.sh" ) | sudo crontab -u root -
+    # (sudo crontab -u root -l; echo "@reboot /opt/logstash/cesa-selfserving/commands/utils/daily_refresh_buff_cache_mem_v1_0_171205.sh" ) | sudo crontab -u root -
     log "[install_logstash] Installed Logstash Version - $ES_VERSION"
 }
 
